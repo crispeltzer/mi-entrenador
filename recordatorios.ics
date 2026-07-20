@@ -1,0 +1,63 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Mi Entrenador//Recordatorios//ES
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Mi Entrenador
+BEGIN:VEVENT
+UID:gym-manana@mi-entrenador
+DTSTAMP:20260720T120000Z
+DTSTART:20260720T093000
+DURATION:PT15M
+RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR
+SUMMARY:🏋️ Gym hoy — dale que podés
+DESCRIPTION:Mínimo 3 por semana\, ideal 5. El frío no te acompaña al altar\, vos sí tenés que llegar. Marcalo en https://crispeltzer.github.io/mi-entrenador/
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:🏋️ Gym hoy — dale que podés
+TRIGGER:-PT0M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:gym-tarde@mi-entrenador
+DTSTAMP:20260720T120000Z
+DTSTART:20260720T150000
+DURATION:PT15M
+RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR
+SUMMARY:⏰ Última llamada — ¿fuiste al gym?
+DESCRIPTION:Si todavía no fuiste\, estás a tiempo. Son 45-60 minutos. Registralo en https://crispeltzer.github.io/mi-entrenador/
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:⏰ Última llamada — ¿fuiste al gym?
+TRIGGER:-PT0M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:checkin-noche@mi-entrenador
+DTSTAMP:20260720T120000Z
+DTSTART:20260720T210000
+DURATION:PT10M
+RRULE:FREQ=DAILY
+SUMMARY:💧🍽️ Registrá agua y comidas
+DESCRIPTION:¿Cuántos vasos tomaste? ¿Cómo comiste? Anotalo antes de dormir en https://crispeltzer.github.io/mi-entrenador/
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:💧🍽️ Registrá agua y comidas
+TRIGGER:-PT0M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:revision-semanal@mi-entrenador
+DTSTAMP:20260720T120000Z
+DTSTART:20260726T190000
+DURATION:PT15M
+RRULE:FREQ=WEEKLY;BYDAY=SU
+SUMMARY:📊 Revisión semanal — mirá tus rachas
+DESCRIPTION:¿Cumpliste el 3/3? Mirá el gráfico de semanas y comprometete con la semana que viene. Primer domingo del mes: pesate y cargá medidas. https://crispeltzer.github.io/mi-entrenador/
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:📊 Revisión semanal — mirá tus rachas
+TRIGGER:-PT0M
+END:VALARM
+END:VEVENT
+END:VCALENDAR

@@ -37,12 +37,15 @@
   .water-count small{display:block;font-size:.7rem;color:var(--muted);font-weight:400;}
   .water-bar{height:10px;background:var(--card2);border-radius:5px;margin-top:12px;overflow:hidden;}
   .water-bar div{height:100%;background:var(--accent2);border-radius:5px;transition:width .3s;}
-  .food-btns{display:flex;gap:8px;}
-  .food-btns button{flex:1;padding:14px 4px;background:var(--card2);border:1px solid var(--border);font-size:.85rem;}
-  .food-btns button .emoji{display:block;font-size:1.4rem;margin-bottom:4px;}
-  .food-btns button.sel-bien{background:#1a3a24;border-color:var(--accent);}
-  .food-btns button.sel-maso{background:#3a301a;border-color:var(--warn);}
-  .food-btns button.sel-mal{background:#3a1a1a;border-color:var(--bad);}
+  .meal-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .meal-name{font-size:.95rem;}
+  .meal-opts{display:flex;gap:6px;}
+  .meal-opts button{width:42px;height:42px;border-radius:10px;background:var(--card2);border:1px solid var(--border);font-size:1.05rem;padding:0;}
+  .meal-opts button.sel-bien{background:#1a3a24;border-color:var(--accent);}
+  .meal-opts button.sel-maso{background:#3a301a;border-color:var(--warn);}
+  .meal-opts button.sel-mal{background:#3a1a1a;border-color:var(--bad);}
+  .meal-opts button.sel-nada{background:#2a2a33;border-color:var(--muted);}
+  .legend{font-size:.7rem;color:var(--muted);margin-top:4px;}
   .week-dots{display:flex;gap:6px;justify-content:space-between;margin-top:10px;}
   .week-dots .dot{flex:1;text-align:center;font-size:.7rem;color:var(--muted);}
   .week-dots .dot span{display:block;width:34px;height:34px;line-height:34px;margin:0 auto 4px;border-radius:50%;background:var(--card2);border:1px solid var(--border);font-size:1rem;}
@@ -95,11 +98,8 @@
     </div>
     <div class="card">
       <h2>🍽️ ¿Cómo comiste hoy?</h2>
-      <div class="food-btns">
-        <button id="food-bien" onclick="setFood('bien')"><span class="emoji">🟢</span>Bien</button>
-        <button id="food-maso" onclick="setFood('maso')"><span class="emoji">🟡</span>Más o menos</button>
-        <button id="food-mal" onclick="setFood('mal')"><span class="emoji">🔴</span>Mal</button>
-      </div>
+      <div id="mealRows"></div>
+      <div class="legend">🟢 Bien · 🟡 Más o menos · 🔴 Mal · 🚫 No comí</div>
     </div>
   </div>
 
@@ -183,8 +183,26 @@ function todayKey(d){
 }
 function getDay(k){
   k=k||todayKey();
-  if(!db.days[k]) db.days[k]={gym:false,water:0,food:null};
+  if(!db.days[k]) db.days[k]={gym:false,water:0,meals:{}};
+  if(!db.days[k].meals) db.days[k].meals={};
   return db.days[k];
+}
+const MEALS=[['des','☕ Desayuno'],['alm','🍽️ Almuerzo'],['mer','🧉 Merienda'],['cen','🌙 Cena']];
+const MEAL_OPTS=[['bien','🟢'],['maso','🟡'],['mal','🔴'],['nada','🚫']];
+// Estado del día según comidas. Días viejos (registro simple) usan rec.food.
+function dayFoodStatus(rec){
+  if(!rec) return null;
+  if(rec.meals){
+    const vals=Object.values(rec.meals).filter(v=>v);
+    if(vals.length){
+      const reales=vals.filter(v=>v!=='nada');
+      if(!reales.length) return 'mal'; // no comió nada en todo el día
+      if(reales.indexOf('mal')>=0) return 'mal';
+      if(reales.indexOf('maso')>=0) return 'maso';
+      return 'bien';
+    }
+  }
+  return rec.food||null;
 }
 function mondayOf(d){
   const x=new Date(d); const dow=(x.getDay()+6)%7; x.setDate(x.getDate()-dow); x.setHours(0,0,0,0); return x;
@@ -204,7 +222,7 @@ function gymCountWeek(offsetWeeks){
 /* ---------- acciones ---------- */
 function toggleGym(){const d=getDay();d.gym=!d.gym;save();render();}
 function addWater(n){const d=getDay();d.water=Math.max(0,(d.water||0)+n);save();render();}
-function setFood(v){const d=getDay();d.food=(d.food===v)?null:v;save();render();}
+function setMeal(m,v){const d=getDay();d.meals[m]=(d.meals[m]===v)?null:v;save();render();}
 
 function addMeasure(){
   const peso=parseFloat(document.getElementById('mPeso').value);
@@ -280,8 +298,8 @@ function foodScoreWeek(){
   const mon=mondayOf(new Date());let g=0,t=0;
   for(let i=0;i<7;i++){
     const d=new Date(mon);d.setDate(mon.getDate()+i);
-    const rec=db.days[todayKey(d)];
-    if(rec&&rec.food){t++;if(rec.food==='bien')g++;}
+    const st=dayFoodStatus(db.days[todayKey(d)]);
+    if(st){t++;if(st==='bien')g++;}
   }
   return {g:g,t:t};
 }
@@ -355,11 +373,17 @@ function render(){
   document.getElementById('waterCount').innerHTML=(today.water||0)+'/'+cfg.waterGoal+'<small>vasos ('+((today.water||0)*0.25).toFixed(2).replace('.00','')+' L)</small>';
   document.getElementById('waterBar').style.width=Math.min(100,(today.water||0)/cfg.waterGoal*100)+'%';
 
-  // food
-  ['bien','maso','mal'].forEach(f=>{
-    const b=document.getElementById('food-'+f);
-    b.className=(today.food===f)?('sel-'+f):'';
+  // comidas
+  let mealsHtml='';
+  MEALS.forEach(function(m){
+    const key=m[0], label=m[1], sel=today.meals[key];
+    mealsHtml+='<div class="meal-row"><span class="meal-name">'+label+'</span><span class="meal-opts">';
+    MEAL_OPTS.forEach(function(o){
+      mealsHtml+='<button class="'+(sel===o[0]?'sel-'+o[0]:'')+'" onclick="setMeal(\''+key+'\',\''+o[0]+'\')">'+o[1]+'</button>';
+    });
+    mealsHtml+='</span></div>';
   });
+  document.getElementById('mealRows').innerHTML=mealsHtml;
 
   // stats semana
   const fs=foodScoreWeek();
